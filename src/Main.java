@@ -1,35 +1,42 @@
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
+        //all symbols to subscribe to
+        List<String> symbols = List.of(
+                "AAPL",
+                "MSFT",
+                "NVDA"
+        );
+
+        ScheduledExecutorService displayScheduler = Executors.newSingleThreadScheduledExecutor();
+
         FakeMarketDataProvider provider = new FakeMarketDataProvider();
         StripedEventDispatcher dispatcher = new StripedEventDispatcher(4);
         MarketProcessor processor = new MarketProcessor();
-        provider.subscribe(
-                "AAPL",
+        ConsoleMarketView view = new ConsoleMarketView();
 
-                // whenever the provider produces a MarketEvent
-                event -> {
-
-                    // send this work to the stripe associated with this symbol
-                    dispatcher.dispatch(
+        for (String symbol : symbols) {
+            provider.subscribe(
+                    symbol,
+                    event -> dispatcher.dispatch(
                             event.symbol(),
-                            // actual work to be executed
-                            () -> {
-                                processor.process(event);
-                                System.out.println(
-                                        processor.getState(event.symbol())
-                                );
-                            }
-                    );
-                }
+                            () -> processor.process(event)
+                    )
+            );
+        }
+
+        displayScheduler.scheduleAtFixedRate(
+                () -> {
+                    view.render(processor.getSnapshot());
+                },
+                1,
+                2,
+                TimeUnit.SECONDS
         );
-//        provider.subscribe(
-//                "MSFT",
-//                event -> System.out.println(event)
-//        );
 
     }
 }
