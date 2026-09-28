@@ -1,18 +1,19 @@
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 public class ConsoleMarketView {
     //table width
-    private static final int TABLE_WIDTH = 87;
+    private static final int TABLE_WIDTH = 97;
 
     //makes the table for the terminal view
-    public void render(Map<String, MarketState> snapshot) {
+    public void render(List<MarketViewRow> rows) {
 
        System.out.println("-".repeat(TABLE_WIDTH));
 
         //lays out table nicely in columns
         System.out.printf(
-                "%-8s %10s %10s %10s %10s %10s %12s %10s%n",
+                "%-8s %10s %10s %10s %10s %10s %12s %10s %8s%n",
                 "SYMBOL",
                 "PRICE",
                 "TICK %",
@@ -20,17 +21,21 @@ public class ConsoleMarketView {
                 "HIGH",
                 "LOW",
                 "SESSION %",
-                "STATUS"
+                "STATUS",
+                "TREND"
         );
 
         System.out.println("-".repeat(TABLE_WIDTH));
 
         //orders the symbols in a predictable output (ASC)
-        snapshot.values().stream()
-                .sorted(Comparator.comparing(MarketState::symbol))
-                .forEach(state -> {
+
+        rows.stream()
+                .sorted(Comparator.comparing(row -> row.state().symbol()))
+                .forEach(row -> {
+                    MarketState state = row.state();
+
                     System.out.printf(
-                            "%-8s %10.2f %+9.2f%% %10.2f %10.2f %10.2f %+11.2f%% %10s%n",
+                            "%-8s %10.2f %+9.2f%% %10.2f %10.2f %10.2f %+11.2f%% %10s %8s%n",
                             state.symbol(),
                             state.price(),
                             state.changePercent(),
@@ -38,7 +43,8 @@ public class ConsoleMarketView {
                             state.highPrice(),
                             state.lowPrice(),
                             state.sessionChangePercent(),
-                            state.status()
+                            state.status(),
+                            row.trend()
                     );
                 });
     }

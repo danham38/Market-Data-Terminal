@@ -1,4 +1,6 @@
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -29,9 +31,18 @@ public class Main {
             );
         }
 
+
         displayScheduler.scheduleAtFixedRate(
                 () -> {
-                    view.render(processor.getSnapshot());
+                    Map<String, MarketState> snapshot = processor.getSnapshot();
+                    List<MarketViewRow> rows = new ArrayList<>();
+
+                    for (MarketState state : snapshot.values()) {
+                        TrendDirection trend = processor.getTrend(state.symbol());
+                        MarketViewRow row = new MarketViewRow(state, trend);
+                        rows.add(row);
+                    }
+                    view.render(rows);
                 },
                 1,
                 2,
