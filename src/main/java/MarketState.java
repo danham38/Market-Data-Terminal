@@ -1,3 +1,5 @@
+
+
 public record MarketState(
         String symbol,
         double price,

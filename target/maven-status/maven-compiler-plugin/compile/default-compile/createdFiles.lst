@@ -1,0 +1,13 @@
+TrendDirection.class
+MarketTerminalApp.class
+MarketEvent.class
+MarketProcessor.class
+FakeMarketDataProvider.class
+MarketViewRow.class
+MarketStatus.class
+StripedEventDispatcher.class
+MarketState.class
+Main.class
+ConsoleMarketView.class
+MarketDataProvider.class
+FakeMarketDataProvider$MarketSubscription.class
