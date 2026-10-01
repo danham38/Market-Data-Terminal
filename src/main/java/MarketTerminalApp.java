@@ -25,6 +25,8 @@ public class MarketTerminalApp extends Application {
     //vars for timestamp checking
     private long lastChartTimeStamp = -1;
     private int chartTick = 0;
+    //starting symbol for price chart
+    private String selectedSymbol = "AAPL";
     //for linking the market data to JavaFX table
     FakeMarketDataProvider provider = new FakeMarketDataProvider();
     StripedEventDispatcher stripes = new StripedEventDispatcher(4);
@@ -110,9 +112,17 @@ public class MarketTerminalApp extends Application {
         //show the frame
         stage.setScene(scene);
         stage.show();
-
-
-        //rolling price chart
+        //listen for table selection
+        table.getSelectionModel().selectedItemProperty().
+                addListener((observable, oldRow, newRow) -> {
+            if (newRow != null) {
+                selectedSymbol = newRow.state().symbol();
+                priceSeries.getData().clear();
+                chartTick = 0;
+                lastChartTimeStamp = -1;
+                priceSeries.setName(selectedSymbol);
+            }
+        });
 
 
         //timeline for refresh
@@ -128,15 +138,15 @@ public class MarketTerminalApp extends Application {
                             Map<String, MarketState> snapshot = processor.getSnapshot();
                         List<MarketViewRow> rows = new ArrayList<>();
                         //get aapl snapshot
-                            MarketState aaplState = snapshot.get("AAPL");
+                            MarketState selectedState = snapshot.get(selectedSymbol);
                             //if exists and timestamp hasn't been seen before
-                            if (aaplState != null && aaplState.timestamp() != lastChartTimeStamp) {
+                            if (selectedState != null && selectedState.timestamp() != lastChartTimeStamp) {
                                 //add to chart
-                                priceSeries.getData().add(new XYChart.Data<>(chartTick, aaplState.price()));
+                                priceSeries.getData().add(new XYChart.Data<>(chartTick, selectedState.price()));
                                 //increment chartTick
                                 chartTick++;
                                 //remember timestamp
-                                lastChartTimeStamp = aaplState.timestamp();
+                                lastChartTimeStamp = selectedState.timestamp();
                                 //if size gets too big, remove first point
                                 if (priceSeries.getData().size() > 60) {
                                     priceSeries.getData().removeFirst();
