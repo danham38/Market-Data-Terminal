@@ -13,12 +13,18 @@ import javafx.stage.Stage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javafx.scene.chart.XYChart;
 
 public class MarketTerminalApp extends Application {
+    //vars for timestamp checking
+    private long lastChartTimeStamp = -1;
+    private int chartTick = 0;
     //for linking the market data to JavaFX table
     FakeMarketDataProvider provider = new FakeMarketDataProvider();
     StripedEventDispatcher stripes = new StripedEventDispatcher(4);
@@ -48,9 +54,21 @@ public class MarketTerminalApp extends Application {
 
         //label table
         Label title = new Label("MARKET TERMINAL");
-
+        NumberAxis xAxis = new NumberAxis();
+        NumberAxis yAxis = new NumberAxis();
+        //scaling as deltas are small; if axis scaled to 0 then line looks flat
+        yAxis.setForceZeroInRange(false);
+        LineChart<Number, Number> priceChart = new LineChart<>(xAxis, yAxis);
+        //price series chart
+        XYChart.Series<Number, Number> priceSeries = new XYChart.Series<>();
+        //stop animations
+        priceChart.setAnimated(false);
+        //stops dots being drawn at each discrete interval
+        priceChart.setCreateSymbols(false);
+        priceSeries.setName("AAPL");
+        priceChart.getData().add(priceSeries);
         //dimensions
-        VBox root = new VBox(title, table);
+        VBox root = new VBox(title, table, priceChart);
         Scene scene = new Scene(root, 1000, 650);
 
         //title and headers
@@ -89,27 +107,12 @@ public class MarketTerminalApp extends Application {
                 sessionPercentageColumn,
                 statusColumn
         );
-        //temp object to display prices
-        MarketState testState = new MarketState(
-                "AAPL",
-                200.50,
-                199.50,
-                1.00,
-                0.50,
-                198.00,
-                202.00,
-                197.00,
-                2.50,
-                1.26,
-                System.currentTimeMillis(),
-                MarketStatus.LIVE
-        );
-        //temp test view
-        MarketViewRow testRow =
-                new MarketViewRow(testState, TrendDirection.UP);
-        table.getItems().add(testRow);
+        //show the frame
         stage.setScene(scene);
         stage.show();
+
+
+        //rolling price chart
 
 
         //timeline for refresh
@@ -124,7 +127,22 @@ public class MarketTerminalApp extends Application {
                             //get snapshot
                             Map<String, MarketState> snapshot = processor.getSnapshot();
                         List<MarketViewRow> rows = new ArrayList<>();
-                        //loop through snapshots
+                        //get aapl snapshot
+                            MarketState aaplState = snapshot.get("AAPL");
+                            //if exists and timestamp hasn't been seen before
+                            if (aaplState != null && aaplState.timestamp() != lastChartTimeStamp) {
+                                //add to chart
+                                priceSeries.getData().add(new XYChart.Data<>(chartTick, aaplState.price()));
+                                //increment chartTick
+                                chartTick++;
+                                //remember timestamp
+                                lastChartTimeStamp = aaplState.timestamp();
+                                //if size gets too big, remove first point
+                                if (priceSeries.getData().size() > 60) {
+                                    priceSeries.getData().removeFirst();
+                                }
+                            }
+                            //loop through snapshots
                         for (MarketState s : snapshot.values()) {
                             //call processor to get trend for that symbol
                             TrendDirection trend = processor.getTrend(s.symbol());
@@ -132,11 +150,12 @@ public class MarketTerminalApp extends Application {
                             rows.add(row);
                         }
                         table.getItems().setAll(rows);
+
                         }
 
                 ));
         //repeat indefinitely
-        timeline.setCycleCount(timeline.INDEFINITE);
+        timeline.setCycleCount(Timeline.INDEFINITE);
         //start timer
         timeline.play();
     }
