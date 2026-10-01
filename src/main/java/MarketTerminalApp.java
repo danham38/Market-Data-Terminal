@@ -58,6 +58,9 @@ public class MarketTerminalApp extends Application {
         TableColumn<MarketViewRow, String> symbolColumn = new TableColumn<>("SYMBOL");
         TableColumn<MarketViewRow, Double> priceColumn = new TableColumn<>("PRICE");
         TableColumn<MarketViewRow, String> trendColumn = new TableColumn<>("TREND");
+        TableColumn<MarketViewRow, Double> tickPercentageColumn = new TableColumn<>("TICK %");
+        TableColumn<MarketViewRow, Double> sessionPercentageColumn = new TableColumn<>("SESSION %");
+        TableColumn<MarketViewRow, String> statusColumn = new TableColumn<>("STATUS");
         //get values
         symbolColumn.setCellValueFactory(
                 data -> new ReadOnlyStringWrapper(data.getValue().state().symbol())
@@ -68,11 +71,23 @@ public class MarketTerminalApp extends Application {
         trendColumn.setCellValueFactory(
                 data -> new ReadOnlyStringWrapper(data.getValue().trend().toString())
         );
+        tickPercentageColumn.setCellValueFactory(
+                data -> new ReadOnlyObjectWrapper<>(data.getValue().state().changePercent())
+        );
+        sessionPercentageColumn.setCellValueFactory(
+                data -> new ReadOnlyObjectWrapper<>(data.getValue().state().sessionChangePercent())
+        );
+        statusColumn.setCellValueFactory(
+                data -> new ReadOnlyStringWrapper(data.getValue().state().status().toString())
+        );
         //add columns to table
         table.getColumns().addAll(
                 symbolColumn,
                 priceColumn,
-                trendColumn
+                trendColumn,
+                tickPercentageColumn,
+                sessionPercentageColumn,
+                statusColumn
         );
         //temp object to display prices
         MarketState testState = new MarketState(
