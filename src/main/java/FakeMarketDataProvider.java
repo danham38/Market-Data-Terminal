@@ -2,12 +2,16 @@
 
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class FakeMarketDataProvider implements MarketDataProvider {
+    //set for paused symbols - ConcurrentHashMap as two different threads will interact and needs to be thread safe
+    private final Set<String> pausedSymbols = ConcurrentHashMap.newKeySet();
     //ScheduledExecutorService = run this code repeatedly on another thread
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
 
@@ -27,7 +31,8 @@ public class FakeMarketDataProvider implements MarketDataProvider {
         MarketSubscription subscription = new MarketSubscription(
                 normalisedSymbol,
                 consumer,
-                startingPrice);
+                startingPrice,
+                pausedSymbols);
 
         scheduler.scheduleAtFixedRate(
                 subscription,
@@ -40,21 +45,24 @@ public class FakeMarketDataProvider implements MarketDataProvider {
 
 
 
-    //inner object
+    //inner class
 
     private static class MarketSubscription implements Runnable{
         private final String symbol;
         private final Consumer<MarketEvent> consumer;
+        private final Set<String> pausedSymbols;
         private double currentPrice;
 
         //constructor
         public MarketSubscription(
                 String symbol,
                 Consumer<MarketEvent> consumer,
-                double startingPrice) {
+                double startingPrice,
+                Set<String> pausedSymbols) {
             this.symbol = symbol;
             this.consumer = consumer;
             this.currentPrice = startingPrice;
+            this.pausedSymbols = pausedSymbols;
         }
 
         //each time run() runs:
@@ -64,6 +72,11 @@ public class FakeMarketDataProvider implements MarketDataProvider {
         //send event to subscriber
         @Override
         public void run() {
+
+            //Fake fault injection to simulate stopped receiving market states
+            if (pausedSymbols.contains(symbol)) {
+                return;
+            }
             //makes a percentage -0.25% -> +0.25%
             double percentageMove = (Math.random() - 0.5) * 0.005;
             double change = currentPrice * percentageMove;
@@ -77,6 +90,16 @@ public class FakeMarketDataProvider implements MarketDataProvider {
             consumer.accept(event);
         }
 
+
+    }
+
+    public void pauseSymbol(String symbol) {
+        String normalisedSymbol = symbol.toUpperCase(Locale.ROOT);
+        pausedSymbols.add(normalisedSymbol);
+    }
+    public void resumeSymbol(String symbol) {
+        String normalisedSymbol = symbol.toUpperCase(Locale.ROOT);
+        pausedSymbols.remove(normalisedSymbol);
 
     }
 }

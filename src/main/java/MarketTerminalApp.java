@@ -1,3 +1,4 @@
+import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -125,7 +126,7 @@ public class MarketTerminalApp extends Application {
                 if (empty || percentageTick == null) {
                     setText(null);
                 } else {
-                    setText(String.format("%+.2f&%%", percentageTick));
+                    setText(String.format("%+.2f%%", percentageTick));
                 }
             }
         });
@@ -163,15 +164,32 @@ public class MarketTerminalApp extends Application {
         //show the frame
         stage.setScene(scene);
         stage.show();
+        PauseTransition pauseTest = new PauseTransition(Duration.seconds(5));
+
+        pauseTest.setOnFinished(event -> {
+            provider.pauseSymbol("MSFT");
+        });
+
+        pauseTest.play();
         //listen for table selection
         table.getSelectionModel().selectedItemProperty().
                 addListener((observable, oldRow, newRow) -> {
             if (newRow != null) {
+                //get clicked on symbol
                 selectedSymbol = newRow.state().symbol();
+                //display new symbol in title
                 priceChart.setTitle(selectedSymbol + " Rolling Price");
+                //clear previous data
                 priceSeries.getData().clear();
-                chartTick = 0;
-                lastChartTimeStamp = -1;
+                //get price history
+                List<Double> history = processor.getPriceHistory(selectedSymbol);
+                //display price history
+                for (int i = 0; i < history.size(); i++) {
+                    priceSeries.getData().add(new XYChart.Data<>(i, history.get(i)));
+                }
+                chartTick = history.size();
+                //latest state currently displayed is already accounted for
+                lastChartTimeStamp = newRow.state().timestamp();
                 priceSeries.setName(selectedSymbol);
             }
         });
