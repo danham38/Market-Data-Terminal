@@ -1,6 +1,8 @@
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.application.Application;
@@ -65,6 +67,7 @@ public class MarketTerminalApp extends Application {
         XYChart.Series<Number, Number> priceSeries = new XYChart.Series<>();
         //stop animations
         priceChart.setAnimated(false);
+        priceChart.setTitle(selectedSymbol + " Rolling Price");
         //stops dots being drawn at each discrete interval
         priceChart.setCreateSymbols(false);
         priceSeries.setName("AAPL");
@@ -72,6 +75,12 @@ public class MarketTerminalApp extends Application {
         //dimensions
         VBox root = new VBox(title, table, priceChart);
         Scene scene = new Scene(root, 1000, 650);
+
+        //setting height for aesthetics
+        table.setPrefHeight(160);
+        table.setMaxHeight(160);
+        VBox.setVgrow(priceChart, Priority.ALWAYS);
+        root.setSpacing(8);
 
         //title and headers
         stage.setTitle("Market Terminal");
@@ -86,17 +95,59 @@ public class MarketTerminalApp extends Application {
                 data -> new ReadOnlyStringWrapper(data.getValue().state().symbol())
         );
         priceColumn.setCellValueFactory(
-                data -> new ReadOnlyObjectWrapper<>(data.getValue().state().price())
+                data -> new ReadOnlyObjectWrapper<>(
+                        data.getValue().state().price()
+                )
         );
+        priceColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double price, boolean empty) {
+                super.updateItem(price, empty);
+                if (empty || price == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%.2f", price));
+                }
+            }
+        });
         trendColumn.setCellValueFactory(
                 data -> new ReadOnlyStringWrapper(data.getValue().trend().toString())
         );
         tickPercentageColumn.setCellValueFactory(
-                data -> new ReadOnlyObjectWrapper<>(data.getValue().state().changePercent())
+                data -> new ReadOnlyObjectWrapper<>(
+                        data.getValue().state().changePercent()
+                )
         );
+        tickPercentageColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double percentageTick, boolean empty) {
+                super.updateItem(percentageTick, empty);
+                if (empty || percentageTick == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%+.2f&%%", percentageTick));
+                }
+            }
+        });
         sessionPercentageColumn.setCellValueFactory(
-                data -> new ReadOnlyObjectWrapper<>(data.getValue().state().sessionChangePercent())
+                data -> new ReadOnlyObjectWrapper<>(
+                        data.getValue().state().sessionChangePercent()
+                )
         );
+        sessionPercentageColumn.setCellFactory(column -> new TableCell<>() {
+            @Override
+            protected void updateItem(Double spc, boolean empty) {
+                //spc = sessionChangePercentage
+                super.updateItem(spc, empty);
+                if (empty || spc == null) {
+
+                    setText(null);
+                } else {
+                    setText(String.format("%+.2f%%", spc));
+                }
+            }
+        });
+
         statusColumn.setCellValueFactory(
                 data -> new ReadOnlyStringWrapper(data.getValue().state().status().toString())
         );
@@ -117,6 +168,7 @@ public class MarketTerminalApp extends Application {
                 addListener((observable, oldRow, newRow) -> {
             if (newRow != null) {
                 selectedSymbol = newRow.state().symbol();
+                priceChart.setTitle(selectedSymbol + " Rolling Price");
                 priceSeries.getData().clear();
                 chartTick = 0;
                 lastChartTimeStamp = -1;
@@ -169,6 +221,8 @@ public class MarketTerminalApp extends Application {
         //start timer
         timeline.play();
     }
+
+
 
     public static void main(String[] args) {
         launch(args);

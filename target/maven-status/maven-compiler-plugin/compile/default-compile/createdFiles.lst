@@ -1,13 +1,16 @@
 TrendDirection.class
 MarketTerminalApp.class
 MarketEvent.class
+MarketTerminalApp$1.class
 MarketProcessor.class
 FakeMarketDataProvider.class
 MarketViewRow.class
 MarketStatus.class
+MarketTerminalApp$2.class
 StripedEventDispatcher.class
 MarketState.class
 Main.class
+MarketTerminalApp$3.class
 ConsoleMarketView.class
 MarketDataProvider.class
 FakeMarketDataProvider$MarketSubscription.class
