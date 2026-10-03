@@ -102,4 +102,10 @@ public class FakeMarketDataProvider implements MarketDataProvider {
         pausedSymbols.remove(normalisedSymbol);
 
     }
+
+    //resource management
+    //stopes future work but allows currently executing work to finish
+    public void shutdown() {
+        scheduler.shutdown();
+    }
 }

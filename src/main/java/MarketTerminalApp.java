@@ -1,4 +1,4 @@
-import javafx.animation.PauseTransition;
+
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -18,11 +18,13 @@ import javafx.animation.Timeline;
 import javafx.util.Duration;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
+import javafx.scene.control.Button;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javafx.scene.chart.XYChart;
+import javafx.scene.layout.HBox;
 
 public class MarketTerminalApp extends Application {
     //vars for timestamp checking
@@ -73,8 +75,30 @@ public class MarketTerminalApp extends Application {
         priceChart.setCreateSymbols(false);
         priceSeries.setName("AAPL");
         priceChart.getData().add(priceSeries);
-        //dimensions
-        VBox root = new VBox(title, table, priceChart);
+
+        // fault injection & restore buttons
+        Button pauseFeedButton = new Button("Simulate Feed Failure");
+        Button resumeFeedButton  = new Button("Restore Feed");
+
+        //button lambda for pausing feed for selected symbol
+        pauseFeedButton.setOnAction( event -> {
+            provider.pauseSymbol(selectedSymbol);
+        });
+
+        //button lambda for resuming feed for selected symbol
+        resumeFeedButton.setOnAction(event -> {
+            provider.resumeSymbol(selectedSymbol);
+        });
+
+        //container for buttons
+        HBox faultControls = new HBox(
+                pauseFeedButton,
+                resumeFeedButton
+        );
+        faultControls.setSpacing(8);
+
+        //dimensions & init of window
+        VBox root = new VBox(title, table, faultControls, priceChart);
         Scene scene = new Scene(root, 1000, 650);
 
         //setting height for aesthetics
@@ -82,6 +106,8 @@ public class MarketTerminalApp extends Application {
         table.setMaxHeight(160);
         VBox.setVgrow(priceChart, Priority.ALWAYS);
         root.setSpacing(8);
+
+
 
         //title and headers
         stage.setTitle("Market Terminal");
@@ -164,13 +190,6 @@ public class MarketTerminalApp extends Application {
         //show the frame
         stage.setScene(scene);
         stage.show();
-        PauseTransition pauseTest = new PauseTransition(Duration.seconds(5));
-
-        pauseTest.setOnFinished(event -> {
-            provider.pauseSymbol("MSFT");
-        });
-
-        pauseTest.play();
         //listen for table selection
         table.getSelectionModel().selectedItemProperty().
                 addListener((observable, oldRow, newRow) -> {
@@ -238,6 +257,12 @@ public class MarketTerminalApp extends Application {
         timeline.setCycleCount(Timeline.INDEFINITE);
         //start timer
         timeline.play();
+    }
+
+    @Override
+    public void stop() {
+        provider.shutdown();
+        stripes.shutdown();
     }
 
 

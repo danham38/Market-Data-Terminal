@@ -56,12 +56,12 @@ public class MarketProcessor {
         double openPrice = previousState.openPrice();
         double highPrice = Math.max(previousState.highPrice(), event.price());
         double lowPrice = Math.min(previousState.lowPrice(), event.price());
-        double sessionChange = previousState.openPrice() - event.price();
+        double sessionChange = event.price() - previousState.openPrice();
         double sessionChangePercent;
         if (previousState.openPrice() == 0.0) {
             sessionChangePercent = 0.0;
         } else {
-            sessionChangePercent = ((event.price() - previousState.openPrice()) / previousState.openPrice()) * 100;
+            sessionChangePercent = (sessionChange) / previousState.openPrice() * 100;
         }
         //if prevState price is 0, div by 0 = error so set changePerc to 0.0
         if (previousState.price() == 0.0) {

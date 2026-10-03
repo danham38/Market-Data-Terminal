@@ -24,4 +24,10 @@ public class StripedEventDispatcher {
         });
     }
 
+    public void shutdown() {
+        for (ExecutorService stripe : stripes) {
+            stripe.shutdown();
+        }
+    }
+
 }
