@@ -1,4 +1,7 @@
+package ui;
 
+import dispatch.StripedEventDispatcher;
+import feed.FakeMarketDataProvider;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -6,13 +9,10 @@ import javafx.scene.control.TableCell;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.application.Application;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.scene.Scene;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.stage.Stage;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
@@ -20,11 +20,17 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Button;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javafx.scene.chart.XYChart;
 import javafx.scene.layout.HBox;
+import model.MarketState;
+import model.TrendDirection;
+import processing.MarketProcessor;
+import recording.EventRecorder;
 
 public class MarketTerminalApp extends Application {
     //vars for timestamp checking
@@ -39,21 +45,30 @@ public class MarketTerminalApp extends Application {
     //symbols
     List<String> symbols = List.of("AAPL", "MSFT", "NVDA");
 
+    private EventRecorder recorder;
+
 
     //method for table generation and data importing to table
     @Override
-    public void start(Stage stage) {
+    public void start(Stage stage) throws IOException {
+        recorder = new EventRecorder(Path.of("marketEvents.csv"));
         //loop through each symbol, subscribe to that symbol
         for (String s : symbols) {
             provider.subscribe(
                     s,
-                    //Consumer (receives MarketEvent without returning a result) LAMBDA 1
-                    event -> stripes.dispatch(
-                            event.symbol(),
-                            //Runnable lambda (takes no inputs and returns nothing) LAMBDA 2
-                            //already receives the variable from the surrounding lambda (variable capture)
-                            () -> processor.process(event))
-                    );
+                    //Consumer (receives model.MarketEvent without returning a result) LAMBDA 1
+                    event -> {
+                        try {
+                            recorder.record(event);
+                        } catch (IOException e) {
+                            System.err.println("Failed to record market event:" + e);
+                        }
+                        stripes.dispatch(
+                                event.symbol(),
+                                //Runnable lambda (takes no inputs and returns nothing) LAMBDA 2
+                                //already receives the variable from the surrounding lambda (variable capture)
+                                () -> processor.process(event));
+                    });
         }
 
         //create table
@@ -259,10 +274,17 @@ public class MarketTerminalApp extends Application {
         timeline.play();
     }
 
+    //graceful shutdown for resource management
     @Override
-    public void stop() {
+    public void stop() throws Exception {
         provider.shutdown();
         stripes.shutdown();
+        try {
+            recorder.close();
+        } catch (IOException e) {
+            System.err.println("Failed to close recorder: " + e);
+        }
+
     }
 
 

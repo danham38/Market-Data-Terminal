@@ -13,7 +13,12 @@ public class StripedEventDispatcher {
         //iterate over that many
         for (int i = 0; i < stripeCount; i++) {
             //for each i, add a worker thread at position i of stripes
-            stripes[i] = Executors.newSingleThreadExecutor();
+            try {
+                stripes[i] = Executors.newSingleThreadExecutor();
+            } catch (Exception e) {
+                System.out.println("Error dispatching stripes:" + e.getMessage());
+            }
+
         }
     }
     public void dispatch(String symbol, Runnable task) {
