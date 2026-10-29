@@ -1,4 +1,9 @@
+import model.MarketEvent;
+import model.MarketState;
+import model.MarketStatus;
+import model.TrendDirection;
 import org.junit.jupiter.api.Test;
+import processing.MarketProcessor;
 
 import java.util.List;
 import java.util.Map;
@@ -54,7 +59,7 @@ public class MarketProcessorTest {
 
         //ASSERT
         assertNotNull(state);
-        //0.0001 the tolerance that we allow _. as using doubles need smaller tolerance than ints
+        //0.0001 the tolerance that we allow. as using doubles need smaller tolerance than ints
         assertEquals(210.00, state.price(), tolerance);
         assertEquals(200.00, state.previousPrice(), tolerance);
         assertEquals(10.00, state.change(), tolerance);
