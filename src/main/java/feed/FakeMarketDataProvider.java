@@ -1,4 +1,6 @@
+package feed;
 
+import model.MarketEvent;
 
 import java.util.Locale;
 import java.util.Map;
@@ -68,7 +70,7 @@ public class FakeMarketDataProvider implements MarketDataProvider {
         //each time run() runs:
         //change = x
         //update currentPrice
-        //create MarketEvent
+        //create model.MarketEvent
         //send event to subscriber
         @Override
         public void run() {

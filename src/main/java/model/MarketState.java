@@ -1,4 +1,4 @@
-
+package model;
 
 public record MarketState(
         String symbol,
@@ -15,7 +15,7 @@ public record MarketState(
         MarketStatus status
 ) {
 
-    //allows us to change status by creating new snapshot of MarketState
+    //allows us to change status by creating new snapshot of model.MarketState
     public MarketState withStatus(MarketStatus newStatus) {
         return new MarketState(
                 symbol,

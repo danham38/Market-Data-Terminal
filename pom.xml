@@ -35,7 +35,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>MarketTerminalApp</mainClass>
+                    <mainClass>ui.MarketTerminalApp</mainClass>
                 </configuration>
             </plugin>
             <plugin>

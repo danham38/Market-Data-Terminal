@@ -9,9 +9,9 @@ The project simulates multiple market-data feeds, preserves per-symbol event ord
 ## Features
 
 - Simulated live feeds for multiple symbols
-- Event-driven processing using immutable `MarketEvent` records
+- Event-driven processing using immutable `model.MarketEvent` records
 - Striped single-thread executors for bounded concurrency and per-symbol ordering
-- Derived `MarketState` including current/previous price, tick movement, session open/high/low, session movement, timestamp, and live/stale status
+- Derived `model.MarketState` including current/previous price, tick movement, session open/high/low, session movement, timestamp, and live/stale status
 - Bounded rolling price history and trend calculation
 - JavaFX table and selected-symbol price chart
 - Controlled feed-failure injection and recovery
@@ -22,24 +22,24 @@ The project simulates multiple market-data feeds, preserves per-symbol event ord
 ## Architecture
 
 ```text
-FakeMarketDataProvider
+feed.FakeMarketDataProvider
         |
-        | MarketEvent
+        | model.MarketEvent
         v
-StripedEventDispatcher
+dispatch.StripedEventDispatcher
         |
         | Runnable / process(event)
         v
-MarketProcessor
+processing.MarketProcessor
         |
         | read-only snapshot
         v
-MarketTerminalApp (JavaFX)
+ui.MarketTerminalApp (JavaFX)
 ```
 
 Each symbol is hashed to a fixed single-threaded executor stripe. This preserves event ordering for the same symbol while allowing bounded concurrency across independent symbols.
 
-The `MarketProcessor` separates raw events from derived state, maintains rolling history, calculates trends, and determines whether data is stale based on the age of the latest event.
+The `processing.MarketProcessor` separates raw events from derived state, maintains rolling history, calculates trends, and determines whether data is stale based on the age of the latest event.
 
 The JavaFX layer reads snapshots from the processor and updates the UI on the JavaFX Application Thread.
 

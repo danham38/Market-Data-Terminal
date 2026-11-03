@@ -1,9 +1,10 @@
+package processing;
+
 import model.MarketEvent;
 import model.MarketState;
 import model.MarketStatus;
 import model.TrendDirection;
 import org.junit.jupiter.api.Test;
-import processing.MarketProcessor;
 
 import java.util.List;
 import java.util.Map;
