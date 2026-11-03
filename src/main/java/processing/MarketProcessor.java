@@ -1,4 +1,9 @@
+package processing;
 
+import model.MarketEvent;
+import model.MarketState;
+import model.MarketStatus;
+import model.TrendDirection;
 
 import java.util.Deque;
 import java.util.HashMap;
@@ -71,7 +76,7 @@ public class MarketProcessor {
             changePercent = (change / previousState.price()) * 100;
         }
 
-        //create new MarketState
+        //create new model.MarketState
         MarketState newState = new MarketState(
                 event.symbol(),
                 event.price(),
@@ -89,7 +94,7 @@ public class MarketProcessor {
         states.put(event.symbol(), newState);
     }
 
-    //method to get the MarketState according to symbol
+    //method to get the model.MarketState according to symbol
     public MarketState getState(String symbol) {
         return states.get(symbol);
     }

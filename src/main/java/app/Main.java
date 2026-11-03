@@ -1,4 +1,12 @@
+package app;
 
+import dispatch.StripedEventDispatcher;
+import feed.FakeMarketDataProvider;
+import model.MarketState;
+import model.TrendDirection;
+import processing.MarketProcessor;
+import ui.ConsoleMarketView;
+import ui.MarketViewRow;
 
 import java.util.ArrayList;
 import java.util.List;

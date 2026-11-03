@@ -1,4 +1,6 @@
+package ui;
 
+import model.MarketState;
 
 import java.util.Comparator;
 import java.util.List;
